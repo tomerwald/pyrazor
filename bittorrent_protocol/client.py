@@ -1,5 +1,7 @@
-import struct
 from bittorrent_protocol.consts import PROTOCOL_DESCRIPTION
+import os
+from bittorrent_protocol.message import *
+import struct
 
 
 class BitTorrentClient(object):
@@ -7,6 +9,7 @@ class BitTorrentClient(object):
         self.sock = sock
         self.info_hash = info_hash
         self.peer_id = self._generate_peer_id()
+        self.is_choking = True
 
     @staticmethod
     def _generate_peer_id():
@@ -36,9 +39,34 @@ class BitTorrentClient(object):
         buf = self.sock.recv(68)
         return self._read_handshake_buffer(buf)
 
-    def _create_message_buffer(self, message_type, payload):
-        length_field = struct.pack("!i", len(payload) + 1)
-        buf = length_field + struct.pack("!i", message_type) + payload
-        return buf
+    def get_message_length(self):
+        buf = self.sock.recv(4)
+        if not buf:
+            pass
+        return struct.unpack("!i", buf)[0]
 
-    # def send
+    def read_message(self):
+        msg_len = self.get_message_length()
+        msg_buf = self.sock.recv(msg_len)
+        if not msg_buf:
+            pass
+        return parse_message(msg_buf)
+
+    def send_bitfield(self):
+        bitfield = os.urandom(128)
+        buf = Bitfield(bitfield).create_buffer()
+        self.sock.send(buf)
+
+    def unchoke(self):
+        buf = UnChoke().create_buffer()
+        self.is_choking = False
+        self.sock.send(buf)
+
+    def choke(self):
+        buf = Choke().create_buffer()
+        self.is_choking = True
+        self.sock.send(buf)
+
+    def send_keepalive(self):
+        buf = struct.pack("!i", 0)
+        self.sock.send(buf)
