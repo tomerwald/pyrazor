@@ -32,6 +32,21 @@ class Request(Message):
         return cls(*st.unpack_from('!iii', buf))
 
 
+class Reject(Message):
+    MSG_TYPE = MessageTypes.Reject
+
+    def __init__(self, piece_index, block_offset, block_length):
+        self.piece_index = piece_index
+        self.block_offset = block_offset
+        self.block_length = block_length
+        payload_buffer = st.pack('!iii', piece_index, block_offset, block_length)
+        super(Reject, self).__init__(payload_buffer)
+
+    @classmethod
+    def from_bytes(cls, buf):
+        return cls(*st.unpack_from('!iii', buf))
+
+
 class Bitfield(Message):
     MSG_TYPE = MessageTypes.Bitfield
 

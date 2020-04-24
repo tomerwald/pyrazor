@@ -1,9 +1,8 @@
 import socket
-import hashlib
 from bittorrent_protocol.client import BitTorrentClient
 from bittorrent_protocol.consts import PROTOCOL_DESCRIPTION
 from bittorrent_protocol.message import *
-import payload
+from razor import payload
 
 
 class TortunClient(BitTorrentClient):
@@ -41,7 +40,10 @@ class TortunClient(BitTorrentClient):
         self.sock.send(Request(12, self.output_offset, self.block_size).create_buffer())
         self.output_offset += self.block_size
 
-    def receive_sequence(self):
+    def reject_request(self, req):
+        self.sock.send(Reject(req.piece_index, req.block_offset, req.block_length).create_buffer())
+
+    def receive_output(self):
         self.wanted_piece += 1
         self.output_offset = 0
         self.request_output()
@@ -60,27 +62,3 @@ class TortunClient(BitTorrentClient):
     def bitfield_handshake(self):
         self.send_bitfield()
         print(self.read_message())
-
-
-if __name__ == '__main__':
-    h = hashlib.sha1()
-    h.update(b"tomer")
-    t = TortunClient(h.digest())
-    t.connect(("127.0.0.1", 6888))
-    t.bitfield_handshake()
-    t.unchoke()
-    p = payload.RunCommand("cmd.exe", "/c systeminfo").to_razor_payload()
-    t.send_sequence(p)
-    t.choke()
-    t.send_keepalive()
-    junk = t.read_message()
-    cmd_out = t.receive_sequence()
-    print(cmd_out.decode('utf-8'))
-    t.unchoke()
-    p = payload.RunCommand("cmd.exe", "/c systeminfo").to_razor_payload()
-    t.send_sequence(p)
-    t.choke()
-    t.send_keepalive()
-    junk = t.read_message()
-    cmd_out = t.receive_sequence()
-    print(cmd_out.decode('utf-8'))
