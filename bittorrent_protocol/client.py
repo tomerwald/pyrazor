@@ -62,11 +62,15 @@ class BitTorrentClient(object):
         self.is_choking = False
         self.sock.send(buf)
 
+    def send_keepalive(self):
+        buf = struct.pack("!i", 0)
+        self.sock.send(buf)
+
     def choke(self):
         buf = Choke().create_buffer()
         self.is_choking = True
         self.sock.send(buf)
 
-    def send_keepalive(self):
-        buf = struct.pack("!i", 0)
+    def send_request(self, piece_index, block_offset, block_size):
+        buf = Request(piece_index, block_offset, block_size).create_buffer()
         self.sock.send(buf)

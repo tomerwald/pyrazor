@@ -86,7 +86,7 @@ class Piece(Message):
         return cls(piece_index, block_offset, data)
 
 
-_message_classes = [Request, Have, Bitfield]
+_message_classes = [Request, Have, Bitfield, Piece, UnChoke, Choke, Interested]
 
 
 def parse_message(msg_buf):

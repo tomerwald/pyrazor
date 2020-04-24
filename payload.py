@@ -21,6 +21,11 @@ class RazorPayload(object):
         buf += os.urandom(block_size - len(initial_payload))
         return buf
 
+    @classmethod
+    def read_output(cls, output_buffer):
+        _, length = struct.unpack_from("!ii", output_buffer)
+        return output_buffer[8:8 + length]
+
 
 class RunCommand(RazorPayload):
     COMMAND_TYPE = 0x1
