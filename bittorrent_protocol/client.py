@@ -10,6 +10,7 @@ class BitTorrentClient(object):
         self.info_hash = info_hash
         self.peer_id = self._generate_peer_id()
         self.is_choking = True
+        self.timeout = 120
 
     @staticmethod
     def _generate_peer_id():
@@ -45,15 +46,16 @@ class BitTorrentClient(object):
             pass
         return struct.unpack("!i", buf)[0]
 
-    def read_message(self):
+    def read_message(self, timeout=120):
+        self.sock.settimeout(timeout)
         msg_len = self.get_message_length()
         msg_buf = self.sock.recv(msg_len)
+        self.sock.settimeout(self.timeout)
         if not msg_buf:
             pass
         return parse_message(msg_buf)
 
-    def send_bitfield(self):
-        bitfield = os.urandom(128)
+    def send_bitfield(self, bitfield):
         buf = Bitfield(bitfield).create_buffer()
         self.sock.send(buf)
 

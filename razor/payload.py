@@ -3,7 +3,7 @@ import json
 import struct
 import os
 
-BLOCK_SIZE = 16384 - 12
+BLOCK_SIZE = 16384 - 96
 
 
 class RazorPayload(object):

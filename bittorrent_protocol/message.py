@@ -78,7 +78,7 @@ class Choke(Message):
 
 
 class Interested(Message):
-    MSG_TYPE = MessageTypes.Unchoke
+    MSG_TYPE = MessageTypes.Interested
 
     def __init__(self):
         super(Interested, self).__init__(b'')
@@ -111,6 +111,6 @@ def parse_message(msg_buf):
         if len(msg_buf) > 1:
             return type_to_class[msg_type].from_bytes(msg_buf[1:])
         else:
-            return type_to_class[msg_type].from_bytes()
+            return type_to_class[msg_type]()
     else:
         raise KeyError(f"Unknown message type:{msg_type}")

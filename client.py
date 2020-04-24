@@ -3,6 +3,7 @@ from bittorrent_protocol.client import BitTorrentClient
 from bittorrent_protocol.consts import PROTOCOL_DESCRIPTION
 from bittorrent_protocol.message import *
 from razor import payload
+import os
 
 
 class TortunClient(BitTorrentClient):
@@ -11,7 +12,7 @@ class TortunClient(BitTorrentClient):
         self.block_size = 16384
         self.output_offset = 0
         self.wanted_piece = 12
-
+        self.nonce = None
         self.pending_commands = []
 
     def _validate_handshake(self, result):
@@ -43,22 +44,27 @@ class TortunClient(BitTorrentClient):
     def reject_request(self, req):
         self.sock.send(Reject(req.piece_index, req.block_offset, req.block_length).create_buffer())
 
-    def receive_output(self):
+    def receive_output(self, enc):
         self.wanted_piece += 1
         self.output_offset = 0
-        self.request_output()
         output = b''
         while True:
+            self.request_output()
             new_message = self.read_message()
             if isinstance(new_message, Piece):
-                chunk = payload.RazorPayload.read_output(new_message.data)
+                chunk = payload.RazorPayload.read_output(enc.decrypt(new_message.data))
                 output += chunk
-                if len(chunk) < self.block_size - 8:
+                try:
+                    m = self.read_message(0.1)
                     break
+                except Exception as e:
+                    pass
             else:
                 break
         return output
 
     def bitfield_handshake(self):
-        self.send_bitfield()
+        bitfield = os.urandom(12)
+        self.send_bitfield(bitfield)
+        self.nonce = bitfield
         print(self.read_message())
