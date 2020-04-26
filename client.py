@@ -67,4 +67,4 @@ class TortunClient(BitTorrentClient):
         bitfield = os.urandom(12)
         self.send_bitfield(bitfield)
         self.nonce = bitfield
-        print(self.read_message())
+        self.read_message()

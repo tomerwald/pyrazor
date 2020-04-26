@@ -60,3 +60,29 @@ class UploadFile(RazorPayload):
             u"Data": self.data
         }
         return json.dumps(command).encode()
+
+
+class StartTunnel(RazorPayload):
+    COMMAND_TYPE = 0x3
+
+    def __init__(self, address, timeout):
+        super(StartTunnel, self).__init__()
+        self.address = address
+        self.timeout = timeout
+
+    def _generate_payload(self):
+        command = {
+            u"RemoteAddress": self.address,
+            u"Timeout": self.timeout
+        }
+        return json.dumps(command).encode()
+
+
+class StopTunnel(RazorPayload):
+    COMMAND_TYPE = 0x4
+
+    def __init__(self):
+        super(StopTunnel, self).__init__()
+
+    def _generate_payload(self):
+        return ""

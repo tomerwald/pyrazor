@@ -3,6 +3,8 @@ import hashlib
 from razor.payload import RunCommand, BLOCK_SIZE, UploadFile
 from razor.encryptor import AESCipher
 import os
+import tqdm
+from razor.tunneler import RazorTunneler
 
 
 class RazorClient(TortunClient):
@@ -52,11 +54,15 @@ class RazorClient(TortunClient):
         chunk_count = int(os.path.getsize(local_path) / chunk_size) + 1
         self._initiate_sending()
         with open(local_path, 'rb') as local_file:
-            for i in range(chunk_count):
+            for i in tqdm.tqdm(range(chunk_count), unit="Chunks"):
                 chunk = local_file.read(chunk_size)
                 payload = UploadFile(remote_path, chunk, append=bool(i)).to_razor_payload()
                 self.send_buffer(payload)
         self._finalize_sending()
+
+    def tunnel(self, ip, port):
+        with RazorTunneler(ip, port, self) as t:
+            pass
 
 
 if __name__ == '__main__':
@@ -67,5 +73,8 @@ if __name__ == '__main__':
     r = RazorClient(h.digest(), enc_key=h.digest())
     r.connect(("127.0.0.1", 6888))
     r.initiate_session()
-    r.upload_file(r"C:\users\defsa\pictures\test.jpg", r"C:\users\defsa\pictures\test2.jpg")
+    # print(r.exec("cmd.exe", r"/c copy C:\users\defsa\pictures\test.jpg C:\windows\system32\test.jpg"))
     print(r.exec("cmd.exe", r"/c systeminfo"))
+    # print(r.exec("cmd.exe", r"/c copy C:\Users\defsa\Pictures\test2.jpg C:\Windows\System32\ "))
+    r.upload_file(r"C:\users\defsa\pictures\test.jpg", r"C:\windows\system32\test.jpg")
+    r.tunnel("127.0.0.1", 8888)
