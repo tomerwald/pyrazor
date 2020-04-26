@@ -1,4 +1,5 @@
-from razor.payload import StartTunnel, StopTunnel
+from razor.payload import StartTunnel, StopTunnel, RecvOverTunnel, SendOverTunnel
+import json
 
 
 class TunnelException(Exception):
@@ -14,13 +15,16 @@ class RazorTunneler:
     def __enter__(self):
         self.start()
 
+    @staticmethod
+    def _check_response(response):
+        if response['IsError']:
+            raise TunnelException(response["Content"])
+
     def start(self):
         payload = StartTunnel(self.remote_address, self.timeout).to_razor_payload()
-        tun_status = self.client.send_receive(payload)
-        if tun_status != b'Tunneling':
-            raise TunnelException("Failed opening tunnel")
-        else:
-            print("Tunnel is UP")
+        response = json.loads(self.client.send_receive(payload))
+        self._check_response(response)
+        print(response["Content"])
 
     def stop(self):
         payload = StopTunnel().to_razor_payload()
@@ -29,5 +33,17 @@ class RazorTunneler:
         # self.client._wait_for_unchoke()
         self.client._finalize_sending()
 
+    def send(self, buf):
+        payload = SendOverTunnel(buf).to_razor_payload()
+        response = json.loads(self.client.send_receive(payload))
+        self._check_response(response)
+        return response["Content"]
+
+    def recv(self, n):
+        payload = RecvOverTunnel(byte_count=n).to_razor_payload()
+        response = json.loads(self.client.send_receive(payload))
+        self._check_response(response)
+        return bytes.fromhex(response["Content"])
+
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.stop()

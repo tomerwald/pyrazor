@@ -6,9 +6,9 @@ from razor import payload
 import os
 
 
-class TortunClient(BitTorrentClient):
+class BaseRazorPeer(BitTorrentClient):
     def __init__(self, info_hash):
-        super(TortunClient, self).__init__(socket.socket(), info_hash)
+        super(BaseRazorPeer, self).__init__(socket.socket(), info_hash)
         self.block_size = 16384
         self.output_offset = 0
         self.wanted_piece = 12

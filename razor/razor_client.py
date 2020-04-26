@@ -1,5 +1,4 @@
-from client import TortunClient
-import hashlib
+from razor.proto_client import BaseRazorPeer
 from razor.payload import RunCommand, BLOCK_SIZE, UploadFile
 from razor.encryptor import AESCipher
 import os
@@ -7,10 +6,10 @@ import tqdm
 from razor.tunneler import RazorTunneler
 
 
-class RazorClient(TortunClient):
+class RazorPeer(BaseRazorPeer):
 
     def __init__(self, info_hash, enc_key):
-        super(RazorClient, self).__init__(info_hash)
+        super(RazorPeer, self).__init__(info_hash)
         self.enc_key = enc_key
         self.enc = None
 
@@ -65,20 +64,3 @@ class RazorClient(TortunClient):
 
     def start_tunnel(self, ip, port):
         return RazorTunneler(ip, port, self)
-
-
-if __name__ == '__main__':
-    h = hashlib.sha1()
-    h.update(b"tomer")
-    h = hashlib.sha256()
-    h.update(b"key")
-    r = RazorClient(h.digest(), enc_key=h.digest())
-    r.connect(("127.0.0.1", 6888))
-    r.initiate_session()
-    # print(r.exec("cmd.exe", r"/c copy C:\users\defsa\pictures\test.jpg C:\windows\system32\test.jpg"))
-    # print(r.exec("cmd.exe", r"/c systeminfo"))
-    # print(r.exec("cmd.exe", r"/c copy C:\Users\defsa\Pictures\test2.jpg C:\Windows\System32\ "))
-    # r.upload_file(r"C:\users\defsa\pictures\test.jpg", r"C:\windows\system32\test.jpg")
-    # t = r.start_tunnel("127.0.0.1", 8888)
-    # t.start()
-    # t.stop()

@@ -86,3 +86,31 @@ class StopTunnel(RazorPayload):
 
     def _generate_payload(self):
         return b""
+
+
+class SendOverTunnel(RazorPayload):
+    COMMAND_TYPE = 0x4
+
+    def __init__(self, buf):
+        super(SendOverTunnel, self).__init__()
+        self.buf = buf.hex()
+
+    def _generate_payload(self):
+        command = {
+            u"Buffer": self.buf
+        }
+        return json.dumps(command).encode()
+
+
+class RecvOverTunnel(RazorPayload):
+    COMMAND_TYPE = 0x5
+
+    def __init__(self, byte_count):
+        super(RecvOverTunnel, self).__init__()
+        self.byte_count = byte_count
+
+    def _generate_payload(self):
+        command = {
+            u"ByteCount": self.byte_count
+        }
+        return json.dumps(command).encode()
