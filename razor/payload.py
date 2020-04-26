@@ -79,10 +79,10 @@ class StartTunnel(RazorPayload):
 
 
 class StopTunnel(RazorPayload):
-    COMMAND_TYPE = 0x4
+    COMMAND_TYPE = 0x6
 
     def __init__(self):
         super(StopTunnel, self).__init__()
 
     def _generate_payload(self):
-        return ""
+        return b""
