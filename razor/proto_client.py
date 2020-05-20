@@ -23,6 +23,23 @@ class BaseRazorPeer(BitTorrentClient):
         else:
             return True
 
+    def _get_one_back_connect(self, address, timeout):
+        with socket.socket() as server_sock:
+            server_sock.bind(address)
+            server_sock.listen(1)
+            server_sock.settimeout(timeout)
+            client, _ = server_sock.accept()
+            return client
+
+    def listen(self, address, timeout=1000):
+        print(f"Listening for connections on {address}")
+        self.sock = self._get_one_back_connect(address, timeout)
+        handshake_result = self.read_handshake()
+        self.send_handshake()
+        self._validate_handshake(handshake_result)
+        remote_peer_id = handshake_result["peer_id"]
+        print(f"Connected to remote peer {remote_peer_id}")
+
     def connect(self, address):
         print(f"Connecting to remote instance on {address}")
         self.sock.connect(address)
