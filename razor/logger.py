@@ -22,11 +22,9 @@ class ColoredFormatter(logging.Formatter):
         return logging.Formatter.format(self, record)
 
 
-def get_razor_logger():
-    log = logging.getLogger("Razor")
-    handler = logging.StreamHandler()
-    formatter = ColoredFormatter('%(levelname)s:: %(message)s')
-    handler.setFormatter(formatter)
-        log.addHandler(handler)
-    log.setLevel(logging.DEBUG)
-    return log
+razor_logger = logging.getLogger("Razor")
+_handler = logging.StreamHandler()
+_formatter = ColoredFormatter('%(levelname)s:: %(message)s')
+_handler.setFormatter(_formatter)
+razor_logger.addHandler(_handler)
+razor_logger.setLevel(logging.DEBUG)

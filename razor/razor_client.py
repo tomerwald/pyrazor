@@ -4,14 +4,17 @@ from razor.encryptor import AESCipher
 import os
 import tqdm
 from razor.tunneler import RazorTunneler
+from razor.udp_tracker import UDPTrackerAnnouncer
 
 
 class RazorPeer(BaseRazorPeer):
 
-    def __init__(self, info_hash, enc_key):
+    def __init__(self, info_hash, enc_key, tracker_address):
         super(RazorPeer, self).__init__(info_hash)
         self.enc_key = enc_key
         self.enc = None
+        self.tracker_ip = tracker_address[0]
+        self.tracker_port = tracker_address[1]
 
     def initiate_session(self):
         self.bitfield_handshake()
@@ -70,5 +73,6 @@ class RazorPeer(BaseRazorPeer):
         return RazorTunneler(ip, port, self)
 
     def listen(self, address, timeout=1000):
-        super(RazorPeer, self).listen(address, timeout)
+        with UDPTrackerAnnouncer(self.tracker_ip, self.tracker_port, self.info_hash, self.peer_id, address[1]):
+            super(RazorPeer, self).listen(address, timeout)
         self.initiate_session()
