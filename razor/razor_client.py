@@ -33,9 +33,12 @@ class RazorPeer(BaseRazorPeer):
 
     def send_receive(self, buf):
         self._initiate_sending()
+        self._logger.debug("Sending buffer")
         self.send_buffer(buf)
+        self._logger.debug("Waiting for session reverse")
         self._wait_for_unchoke()
         self._finalize_sending()
+        self._logger.debug("Receiving buffer")
         return self.read_buffer()
 
     def _finalize_sending(self):
@@ -48,6 +51,7 @@ class RazorPeer(BaseRazorPeer):
 
     def exec(self, executable, params=""):
         payload = RunCommand(executable, params).to_razor_payload()
+        self._logger.info(f"Running remote command {executable} {params}")
         cmd_out = self.send_receive(payload)
         return cmd_out.decode('utf-8')
 
@@ -64,3 +68,7 @@ class RazorPeer(BaseRazorPeer):
 
     def start_tunnel(self, ip, port):
         return RazorTunneler(ip, port, self)
+
+    def listen(self, address, timeout=1000):
+        super(RazorPeer, self).listen(address, timeout)
+        self.initiate_session()

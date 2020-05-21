@@ -32,22 +32,22 @@ class BaseRazorPeer(BitTorrentClient):
             return client
 
     def listen(self, address, timeout=1000):
-        print(f"Listening for connections on {address}")
+        self._logger.info(f"Listening for connections on {address}")
         self.sock = self._get_one_back_connect(address, timeout)
         handshake_result = self.read_handshake()
         self.send_handshake()
         self._validate_handshake(handshake_result)
         remote_peer_id = handshake_result["peer_id"]
-        print(f"Connected to remote peer {remote_peer_id}")
+        self._logger.info(f"Connected to remote peer {remote_peer_id}")
 
     def connect(self, address):
-        print(f"Connecting to remote instance on {address}")
+        self._logger.info(f"Connecting to remote instance on {address}")
         self.sock.connect(address)
         self.send_handshake()
         handshake_result = self.read_handshake()
         self._validate_handshake(handshake_result)
         remote_peer_id = handshake_result["peer_id"]
-        print(f"Connected to remote peer {remote_peer_id}")
+        self._logger.info(f"Connected to remote peer {remote_peer_id}")
 
     def send_sequence(self, payload):
         new_message = self.read_message()

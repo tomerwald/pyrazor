@@ -2,6 +2,7 @@ from bittorrent_protocol.consts import PROTOCOL_DESCRIPTION
 import os
 from bittorrent_protocol.message import *
 import struct
+from razor.logger import get_razor_logger
 
 
 class BitTorrentClient(object):
@@ -11,6 +12,7 @@ class BitTorrentClient(object):
         self.peer_id = self._generate_peer_id()
         self.is_choking = True
         self.timeout = 120
+        self._logger = get_razor_logger()
 
     @staticmethod
     def _generate_peer_id():
@@ -33,10 +35,10 @@ class BitTorrentClient(object):
     def send_handshake(self):
         buf = self._create_handshake_buffer()
         self.sock.send(buf)
-        print("Sent handshake")
+        self._logger.debug("Sent handshake")
 
     def read_handshake(self):
-        print("Waiting for razor handshake")
+        self._logger.debug("Waiting for razor handshake")
         buf = self.sock.recv(68)
         return self._read_handshake_buffer(buf)
 
