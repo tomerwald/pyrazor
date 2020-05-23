@@ -17,22 +17,22 @@ class RazorPeer(BaseRazorPeer):
         self.tracker_port = tracker_address[1]
 
     def initiate_session(self):
-        self.bitfield_handshake()
+        self._bitfield_handshake()
         self.enc = AESCipher(self.enc_key, self.nonce)
 
     def _reject_last_request(self):
-        msg = self.read_message()
-        self.reject_request(msg)
+        msg = self._read_message()
+        self._reject_request(msg)
 
     def _wait_for_unchoke(self):
-        msg = self.read_message()
+        msg = self._read_message()
 
     def _initiate_sending(self):
-        self.unchoke()
+        self._unchoke()
 
     def send_buffer(self, buf):
         buf = self.enc.encrypt(buf)
-        self.send_sequence(buf)
+        self._send_sequence(buf)
 
     def send_receive(self, buf):
         self._initiate_sending()
@@ -45,7 +45,7 @@ class RazorPeer(BaseRazorPeer):
         return self.read_buffer()
 
     def _finalize_sending(self):
-        self.choke()
+        self._choke()
         self._reject_last_request()
 
     def read_buffer(self):
@@ -76,3 +76,5 @@ class RazorPeer(BaseRazorPeer):
         with UDPTrackerAnnouncer(self.tracker_ip, self.tracker_port, self.info_hash, self.peer_id, address[1]):
             super(RazorPeer, self).listen(address, timeout)
         self.initiate_session()
+
+    # TODO: close
